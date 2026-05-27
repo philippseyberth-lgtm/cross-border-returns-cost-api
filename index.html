@@ -157,10 +157,10 @@ footer{text-align:center;padding:32px 0;color:#999;font-size:0.85rem;border-top:
 <div class="container">
 <h2>Request Early Access</h2>
 <p>We're opening the API to 50 early-access partners. Get 6 months on the Growth plan free, plus direct input on the roadmap.</p>
-<form id="signup-form" action="https://formspree.io/f/placeholder" method="POST">
+<form id="signup-form">
 <input type="email" name="email" placeholder="Your work email" required>
-<input type="text" name="company" placeholder="Company name">
-<select name="use_case" required>
+<input type="text" name="company" placeholder="Company name" required>
+<select name="monthly_volume" required>
 <option value="" disabled selected>Your use case</option>
 <option value="pricing-engine">Pricing engine / repricing tool</option>
 <option value="returns-management">Returns management platform</option>
@@ -169,6 +169,9 @@ footer{text-align:center;padding:32px 0;color:#999;font-size:0.85rem;border-top:
 <option value="direct-seller">Direct seller (own products)</option>
 <option value="other">Other</option>
 </select>
+<input type="text" name="website" style="position:absolute;left:-9999px;top:-9999px;opacity:0;height:0" tabindex="-1" autocomplete="off">
+<input type="hidden" name="source" value="returns-cost-api-landing">
+<input type="hidden" name="_t" value="">
 <button type="submit">Request Early Access</button>
 </form>
 <div class="success-msg" id="success-msg">Thanks! We'll reach out within 48 hours with your API key.</div>
@@ -182,22 +185,30 @@ footer{text-align:center;padding:32px 0;color:#999;font-size:0.85rem;border-top:
 </footer>
 
 <script>
-document.getElementById('signup-form').addEventListener('submit',function(e){
-  e.preventDefault();
-  var form=this;
-  var data=new FormData(form);
-  // Store locally for now - form endpoint to be configured
-  var entry={
-    email:data.get('email'),
-    company:data.get('company'),
-    use_case:data.get('use_case'),
-    timestamp:new Date().toISOString()
-  };
-  console.log('Early access signup:',JSON.stringify(entry));
-  // Show success
-  form.style.display='none';
-  document.getElementById('success-msg').style.display='block';
-});
+(function(){
+  var form=document.getElementById('signup-form');
+  var tField=form.querySelector('[name="_t"]');
+  if(tField) tField.value=Date.now();
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    var data=new FormData(form);
+    var payload={};
+    data.forEach(function(v,k){payload[k]=v});
+    fetch('https://corridor-forms.corridor-econ.workers.dev/submit',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    }).then(function(r){return r.json()}).then(function(j){
+      if(j.ok){
+        form.style.display='none';
+        document.getElementById('success-msg').style.display='block';
+      }
+    }).catch(function(){
+      form.style.display='none';
+      document.getElementById('success-msg').style.display='block';
+    });
+  });
+})();
 </script>
 </body>
 </html>
